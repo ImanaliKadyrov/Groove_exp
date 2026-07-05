@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЛАБОРАТОРИЯ ГРУВА — эксперимент о синкопации</title>
+<title>ЛАБОРАТОРИЯ МС ГРУВА</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg-0:#170f0c;
-    --bg-1:#121324;
-    --panel:#1a182c;
-    --panel-2:#193137;
-    --line:#274a48;
-    --gold:#3d9be3;
-    --rust:#2e33c1;
-    --cream:#e2d8f3;
-    --muted:#88a5b7;
+    --bg-1:#241712;
+    --panel:#2c1e18;
+    --panel-2:#372619;
+    --line:#4a3527;
+    --gold:#e3a23d;
+    --rust:#c1442e;
+    --cream:#f3e6d8;
+    --muted:#b79c88;
     --green:#7fae6b;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(circle at 15% -10%, rgba(61, 111, 227, 0.1), transparent 45%),
-      radial-gradient(circle at 100% 10%, rgba(141, 21, 184, 0.1), transparent 40%),
+      radial-gradient(circle at 15% -10%, rgba(227,162,61,0.10), transparent 45%),
+      radial-gradient(circle at 100% 10%, rgba(193,68,46,0.10), transparent 40%),
       var(--bg-0);
     color:var(--cream);
     font-family:'Work Sans', sans-serif;
@@ -54,7 +54,7 @@
     box-shadow:0 20px 40px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
   }
   .screw{ position:absolute; width:8px;height:8px; border-radius:50%;
-    background:radial-gradient(circle at 35% 35%, #404c6b, #121524);
+    background:radial-gradient(circle at 35% 35%, #6b5340, #241712);
     box-shadow:inset 0 0 2px rgba(0,0,0,0.8); }
   .screw.tl{top:10px;left:10px;} .screw.tr{top:10px;right:10px;}
   .screw.bl{bottom:10px;left:10px;} .screw.br{bottom:10px;right:10px;}
@@ -64,14 +64,14 @@
     text-transform:uppercase; font-weight:700; background:var(--gold); color:#241712;
     border:none; padding:14px 26px; border-radius:8px; cursor:pointer;
     transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
-    box-shadow:0 6px 0 #2362a9, 0 10px 18px -8px rgba(0,0,0,0.6);
+    box-shadow:0 6px 0 #a97423, 0 10px 18px -8px rgba(0,0,0,0.6);
   }
   button.btn:hover{ transform:translateY(-1px); }
-  button.btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #236fa9; }
+  button.btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #a97423; }
   button.btn.secondary{ background:transparent; color:var(--cream); border:1px solid var(--line); box-shadow:none; }
   button.btn.secondary:active{ transform:translateY(2px); }
   button.btn:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; transform:none; }
-  button.btn.is-playing{ background:var(--rust); box-shadow:0 6px 0 #0a214c, 0 10px 18px -8px rgba(0,0,0,0.6); }
+  button.btn.is-playing{ background:var(--rust); box-shadow:0 6px 0 #7c2c1f, 0 10px 18px -8px rgba(0,0,0,0.6); }
 
   .field{ margin-bottom:20px; }
   .field label{ display:block; font-family:'JetBrains Mono', monospace; font-size:12px;
@@ -92,9 +92,9 @@
   .seq-cells{ display:flex; gap:4px; flex:1; }
   .seq-cell{ flex:1; aspect-ratio:1/1; border-radius:4px; background:rgba(255,255,255,0.04);
     border:1px solid var(--line); transition:background .05s ease, outline .05s ease; }
-  .seq-cell.strong{ background:rgba(227,162,61,0.07); border-color:rgba(78, 61, 227, 0.3); }
-  .seq-cell.active{ background:linear-gradient(180deg, var(--gold), #2337a9); border-color:#2378a9; }
-  .seq-cell.active.strong{ background:linear-gradient(180deg, #b47aff, var(--gold)); }
+  .seq-cell.strong{ background:rgba(227,162,61,0.07); border-color:rgba(227,162,61,0.3); }
+  .seq-cell.active{ background:linear-gradient(180deg, var(--gold), #a97423); border-color:#a97423; }
+  .seq-cell.active.strong{ background:linear-gradient(180deg, #ffd27a, var(--gold)); }
   .seq-cell.playhead{ outline:2px solid var(--rust); outline-offset:1px; }
   .seq-beatnum{ flex:1; text-align:center; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--line); }
   .seq-beatnum.marked{ color:var(--gold); font-weight:700; }
@@ -126,12 +126,12 @@
     background:transparent; transform:rotate(-90deg); margin:0; }
   input[type=range].vslider::-webkit-slider-runnable-track{ height:4px; background:transparent; }
   input[type=range].vslider::-webkit-slider-thumb{ -webkit-appearance:none; width:40px; height:20px; border-radius:4px;
-    background:linear-gradient(180deg, var(--gold), #2330a9); border:1px solid #241712;
-    box-shadow:0 0 10px rgba(61, 91, 227, 0.6), 0 2px 4px rgba(0,0,0,0.5); cursor:pointer; margin-top:-8px; }
+    background:linear-gradient(180deg, var(--gold), #a97423); border:1px solid #241712;
+    box-shadow:0 0 10px rgba(227,162,61,0.6), 0 2px 4px rgba(0,0,0,0.5); cursor:pointer; margin-top:-8px; }
   input[type=range].vslider::-moz-range-track{ height:4px; background:transparent; }
   input[type=range].vslider::-moz-range-thumb{ width:40px; height:20px; border-radius:4px;
-    background:linear-gradient(180deg, var(--gold), #2323a9); border:1px solid #241712;
-    box-shadow:0 0 10px rgba(61, 91, 227, 0.6); cursor:pointer; }
+    background:linear-gradient(180deg, var(--gold), #a97423); border:1px solid #241712;
+    box-shadow:0 0 10px rgba(227,162,61,0.6); cursor:pointer; }
   .fader-value{ margin-top:12px; font-family:'JetBrains Mono', monospace; font-size:20px; font-weight:700;
     color:var(--cream); background:var(--bg-0); border:1px solid var(--line); border-radius:6px;
     padding:4px 14px; min-width:40px; text-align:center; }
@@ -163,6 +163,13 @@ const BPM = 100;
 const STEP_DUR = 60 / BPM / 4; // one 16th note, seconds
 const STRONG_BEATS = [0,4,8,12];
 const HIHAT_PATTERN = [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0];
+
+/* Если страница хостится НЕ на claude.ai (например, GitHub Pages), window.storage
+   недоступен и нужен свой бэкенд. Разверните apps-script-backend.gs (инструкция
+   внутри файла) и вставьте сюда два URL: */
+const SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwCgZBQRHSqANldSsMkBTAi7qvleTpgQ3Gzht93Z8aG04MyfvIm-QkUA3uPZEv4ZEF9KQ/exec'; // URL Apps Script веб-приложения, заканчивается на /exec — сюда шлём ответы
+const SHEET_VIEW_URL   = 'https://docs.google.com/spreadsheets/d/1j2xeJaVjeWxrYzOcfHw6pNjDn-fOZqOs7SFkp7h-VMk/edit?usp=sharing'; // ссылка на саму Google Таблицу — сюда отправляем смотреть результаты
+function hasClaudeStorage(){ return typeof window.storage !== 'undefined'; }
 
 const STIMULI = [
   { key:'minimal', level:'минимальная синкопация',
@@ -367,14 +374,14 @@ function render(){
 /* ---------------- intro ---------------- */
 function renderIntro(){
   const wrap = el('div');
-  wrap.appendChild(el('div',{class:'eyebrow'},'Witek et al.'));
+  wrap.appendChild(el('div',{class:'eyebrow'},'Полевая репликация Witek et al., 2014'));
   wrap.appendChild(el('h1',{},'ЛАБОРАТОРИЯ ГРУВА'));
   wrap.appendChild(el('p',{class:'lead'},
-    'Вы услышите пять коротких барабанных паттернов. После каждого паттерна оцените на двух ползунках, насколько хотелось двигаться и насколько вам было приятно это слушать.'));
+    'Вы услышите пять коротких барабанных паттернов. После каждого паттерна оцените на двух ползунках, насколько хотелось двигаться и насколько это было приятно.'));
   const panel = el('div',{class:'panel'});
   screws(panel);
   panel.appendChild(el('p',{style:'margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.6;'},
-    'Займёт около 2 минут. Включите звук — хай-хэт играет ровными восьмыми на протяжении всего теста, это ваш ориентир.'));
+    'Займёт около 2 минут. Включите звук — хай-хэт играет ровными восьмыми на протяжении всего теста, это ваш ориентир'));
   panel.appendChild(el('button',{class:'btn', onclick:()=>{ state.screen='demo'; render(); }},'НАЧАТЬ \u2192'));
   wrap.appendChild(panel);
   wrap.appendChild(el('div',{class:'footer-note'},'Ваши ответы сохраняются анонимно и видны всем участникам в сводке результатов'));
@@ -559,12 +566,28 @@ function makeFader(label, value, onChange){
 
 /* ---------------- save ---------------- */
 async function saveResponse(){
-  try{
-    const payload = { order: state.order.map(s=>s.key), ratings: state.ratings, demo: state.demo, ts: Date.now() };
-    await window.storage.set('groove-responses:' + state.responseId, JSON.stringify(payload), true);
-  }catch(err){
-    console.error('save error', err);
-    state.saveError = 'Не удалось сохранить ответ, но вы можете посмотреть общие результаты.';
+  const payload = { order: state.order.map(s=>s.key), ratings: state.ratings, demo: state.demo, ts: Date.now() };
+  if(hasClaudeStorage()){
+    try{
+      await window.storage.set('groove-responses:' + state.responseId, JSON.stringify(payload), true);
+    }catch(err){
+      console.error('save error', err);
+      state.saveError = 'Не удалось сохранить ответ во встроенное хранилище Claude.';
+    }
+  } else if(SHEET_WEBAPP_URL){
+    try{
+      await fetch(SHEET_WEBAPP_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Apps Script не отдаёт CORS-заголовки; ответ читать не пытаемся
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+    }catch(err){
+      console.error('save error', err);
+      state.saveError = 'Не удалось отправить ответ на сервер. Проверьте SHEET_WEBAPP_URL и интернет-соединение.';
+    }
+  } else {
+    state.saveError = 'Хранилище не настроено: заполните SHEET_WEBAPP_URL в коде страницы (см. apps-script-backend.gs), иначе результаты нигде не сохраняются.';
   }
 }
 
@@ -601,7 +624,11 @@ function renderDebrief(){
     state = { screen:'intro', order:shuffle(STIMULI), trialIndex:0, demo:{freq:null,enjoy:null}, ratings:{}, responseId:uid(), results:null, saveError:null };
     render();
   }},'ПРОЙТИ ЕЩЁ РАЗ'));
-  actions.appendChild(el('button',{class:'btn', onclick:async ()=>{ await loadResults(); state.screen='results'; render(); }},'ОБЩИЕ РЕЗУЛЬТАТЫ \u2192'));
+  actions.appendChild(el('button',{class:'btn', onclick:async ()=>{
+    if(hasClaudeStorage()){ await loadResults(); state.screen='results'; render(); }
+    else if(SHEET_VIEW_URL){ window.open(SHEET_VIEW_URL, '_blank'); }
+    else { state.screen='results'; render(); }
+  }},'ОБЩИЕ РЕЗУЛЬТАТЫ \u2192'));
   panel.appendChild(actions);
 
   wrap.appendChild(panel);
@@ -611,6 +638,7 @@ function renderDebrief(){
 
 /* ---------------- results ---------------- */
 async function loadResults(){
+  if(!hasClaudeStorage()) return;
   try{
     const list = await window.storage.list('groove-responses:', true);
     const keys = (list && list.keys) ? list.keys : [];
@@ -645,7 +673,19 @@ function renderResults(){
   const panel = el('div',{class:'panel'});
   screws(panel);
 
-  if(!state.results){
+  if(!hasClaudeStorage()){
+    panel.appendChild(el('p',{style:'color:var(--muted); font-size:14px; line-height:1.7;'},
+      'Эта страница размещена не на claude.ai, поэтому сводка считается не здесь, а в подключённой Google Таблице.'));
+    if(SHEET_VIEW_URL){
+      const link = el('a',{href:SHEET_VIEW_URL, target:'_blank', style:'color:var(--gold);'}, 'Открыть таблицу с ответами \u2192');
+      panel.appendChild(el('p',{}, link));
+    } else {
+      panel.appendChild(el('p',{style:'color:var(--rust); font-size:13px;'},
+        'SHEET_VIEW_URL ещё не заполнен в коде страницы — добавьте ссылку на вашу Google Таблицу.'));
+    }
+    panel.appendChild(el('p',{class:'hint'},
+      'Совет: под колонками *_move и *_pleasure добавьте строку с формулой =AVERAGE(диапазон) — так вы получите средние оценки по каждому уровню синкопации.'));
+  } else if(!state.results){
     panel.appendChild(el('p',{style:'color:var(--muted);'},'Пока нет данных или не удалось их загрузить.'));
   } else {
     panel.appendChild(el('p',{style:'color:var(--muted); font-size:13px; margin-bottom:20px;'},
@@ -685,3 +725,4 @@ render();
 </script>
 </body>
 </html>
+
