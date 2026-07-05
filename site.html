@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ЛАБОРАТОРИЯ ГРУВА — эксперимент о синкопации</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#170f0c;
+    --bg-1:#121324;
+    --panel:#1a182c;
+    --panel-2:#193137;
+    --line:#274a48;
+    --gold:#3d9be3;
+    --rust:#2e33c1;
+    --cream:#e2d8f3;
+    --muted:#88a5b7;
+    --green:#7fae6b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% -10%, rgba(61, 111, 227, 0.1), transparent 45%),
+      radial-gradient(circle at 100% 10%, rgba(141, 21, 184, 0.1), transparent 40%),
+      var(--bg-0);
+    color:var(--cream);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .app{ width:100%; max-width:640px; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--gold); display:flex; align-items:center; gap:8px; margin-bottom:10px;
+  }
+  .eyebrow::before{ content:''; width:7px;height:7px;border-radius:50%; background:var(--rust); box-shadow:0 0 8px var(--rust); }
+  h1{
+    font-family:'Anton', sans-serif; font-weight:400; font-size:44px; line-height:0.95;
+    letter-spacing:.01em; margin:0 0 14px; text-transform:uppercase;
+    background:linear-gradient(180deg, var(--cream), var(--gold));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  p.lead{ color:var(--muted); font-size:15px; line-height:1.6; margin:0 0 20px; }
+  .panel{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:14px; padding:26px; position:relative;
+    box-shadow:0 20px 40px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .screw{ position:absolute; width:8px;height:8px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #404c6b, #121524);
+    box-shadow:inset 0 0 2px rgba(0,0,0,0.8); }
+  .screw.tl{top:10px;left:10px;} .screw.tr{top:10px;right:10px;}
+  .screw.bl{bottom:10px;left:10px;} .screw.br{bottom:10px;right:10px;}
+
+  button.btn{
+    font-family:'JetBrains Mono', monospace; font-size:13px; letter-spacing:.08em;
+    text-transform:uppercase; font-weight:700; background:var(--gold); color:#241712;
+    border:none; padding:14px 26px; border-radius:8px; cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+    box-shadow:0 6px 0 #2362a9, 0 10px 18px -8px rgba(0,0,0,0.6);
+  }
+  button.btn:hover{ transform:translateY(-1px); }
+  button.btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #236fa9; }
+  button.btn.secondary{ background:transparent; color:var(--cream); border:1px solid var(--line); box-shadow:none; }
+  button.btn.secondary:active{ transform:translateY(2px); }
+  button.btn:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; transform:none; }
+  button.btn.is-playing{ background:var(--rust); box-shadow:0 6px 0 #0a214c, 0 10px 18px -8px rgba(0,0,0,0.6); }
+
+  .field{ margin-bottom:20px; }
+  .field label{ display:block; font-family:'JetBrains Mono', monospace; font-size:12px;
+    letter-spacing:.06em; color:var(--gold); text-transform:uppercase; margin-bottom:10px; }
+  .choice-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .choice{ flex:1; min-width:80px; text-align:center; padding:10px 8px; border-radius:8px;
+    border:1px solid var(--line); background:rgba(255,255,255,0.02); cursor:pointer;
+    font-size:13px; color:var(--muted); transition:all .12s ease; }
+  .choice.selected{ border-color:var(--gold); color:var(--gold); background:rgba(227,162,61,0.1); }
+
+  /* ===== sequencer ===== */
+  .sequencer{ background:#0d0908; border-radius:10px; padding:16px; border:1px solid var(--line); margin-bottom:22px; }
+  .seq-transport{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; }
+  .seq-tempo{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted); letter-spacing:.05em; }
+  .seq-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .seq-row-label{ width:56px; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--muted);
+    text-transform:uppercase; text-align:right; flex-shrink:0; }
+  .seq-cells{ display:flex; gap:4px; flex:1; }
+  .seq-cell{ flex:1; aspect-ratio:1/1; border-radius:4px; background:rgba(255,255,255,0.04);
+    border:1px solid var(--line); transition:background .05s ease, outline .05s ease; }
+  .seq-cell.strong{ background:rgba(227,162,61,0.07); border-color:rgba(78, 61, 227, 0.3); }
+  .seq-cell.active{ background:linear-gradient(180deg, var(--gold), #2337a9); border-color:#2378a9; }
+  .seq-cell.active.strong{ background:linear-gradient(180deg, #b47aff, var(--gold)); }
+  .seq-cell.playhead{ outline:2px solid var(--rust); outline-offset:1px; }
+  .seq-beatnum{ flex:1; text-align:center; font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--line); }
+  .seq-beatnum.marked{ color:var(--gold); font-weight:700; }
+  .track-tag{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted);
+    letter-spacing:.1em; text-transform:uppercase; margin-top:10px; display:flex; justify-content:space-between; }
+  .track-tag .rec{ color:var(--rust); }
+  .track-tag .rec::before{ content:'\25CF '; }
+
+  /* ===== progress dots ===== */
+  .progress{ display:flex; gap:6px; justify-content:center; margin:18px 0 24px; }
+  .progress .dot{ width:26px; height:4px; border-radius:2px; background:var(--line); }
+  .progress .dot.done{ background:var(--green); }
+  .progress .dot.active{ background:var(--gold); }
+
+  /* ===== faders ===== */
+  .console{ display:flex; justify-content:center; gap:56px; padding:18px 10px 6px; }
+  .fader-unit{ display:flex; flex-direction:column; align-items:center; }
+  .fader-label{ font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:10px; text-align:center; max-width:110px; }
+  .fader-scale{ display:flex; align-items:center; gap:10px; }
+  .tickcol{ display:flex; flex-direction:column; justify-content:space-between; height:180px;
+    font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--line); }
+  .fader-track-bg{ width:46px; height:180px; border-radius:6px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.3));
+    border:1px solid var(--line); position:relative; display:flex; align-items:center; justify-content:center; }
+  .fader-track-bg::before{ content:''; position:absolute; width:2px; height:150px; background:var(--line); border-radius:2px; }
+  .vwrap{ width:34px; height:180px; display:flex; align-items:center; justify-content:center; }
+  input[type=range].vslider{ -webkit-appearance:none; appearance:none; width:150px; height:34px;
+    background:transparent; transform:rotate(-90deg); margin:0; }
+  input[type=range].vslider::-webkit-slider-runnable-track{ height:4px; background:transparent; }
+  input[type=range].vslider::-webkit-slider-thumb{ -webkit-appearance:none; width:40px; height:20px; border-radius:4px;
+    background:linear-gradient(180deg, var(--gold), #2330a9); border:1px solid #241712;
+    box-shadow:0 0 10px rgba(61, 91, 227, 0.6), 0 2px 4px rgba(0,0,0,0.5); cursor:pointer; margin-top:-8px; }
+  input[type=range].vslider::-moz-range-track{ height:4px; background:transparent; }
+  input[type=range].vslider::-moz-range-thumb{ width:40px; height:20px; border-radius:4px;
+    background:linear-gradient(180deg, var(--gold), #2323a9); border:1px solid #241712;
+    box-shadow:0 0 10px rgba(61, 91, 227, 0.6); cursor:pointer; }
+  .fader-value{ margin-top:12px; font-family:'JetBrains Mono', monospace; font-size:20px; font-weight:700;
+    color:var(--cream); background:var(--bg-0); border:1px solid var(--line); border-radius:6px;
+    padding:4px 14px; min-width:40px; text-align:center; }
+
+  .actions{ display:flex; justify-content:space-between; margin-top:26px; gap:12px; }
+
+  /* ===== results / VU bars ===== */
+  .vu-row{ margin-bottom:22px; }
+  .vu-title{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  .vu-bar-bg{ width:100%; height:14px; border-radius:7px; background:rgba(255,255,255,0.03);
+    border:1px solid var(--line); overflow:hidden; position:relative; }
+  .vu-bar-fill{ height:100%; border-radius:7px; background:linear-gradient(90deg, var(--green), var(--gold), var(--rust));
+    transition:width .6s ease; }
+  .vu-caption{ display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace;
+    font-size:11px; color:var(--muted); margin-top:4px; }
+
+  .hint{ font-size:13px; color:var(--muted); line-height:1.6; margin-top:18px; }
+  .footer-note{ text-align:center; color:var(--line); font-family:'JetBrains Mono', monospace; font-size:10px;
+    letter-spacing:.06em; margin-top:22px; text-transform:uppercase; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+/* ---------------- audio engine ---------------- */
+const BPM = 100;
+const STEP_DUR = 60 / BPM / 4; // one 16th note, seconds
+const STRONG_BEATS = [0,4,8,12];
+const HIHAT_PATTERN = [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0];
+
+const STIMULI = [
+  { key:'minimal', level:'минимальная синкопация',
+    name:'Только бочка на каждую долю, малого барабана нет вовсе',
+    kick:  [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+    snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+  { key:'low', level:'низкая синкопация',
+    name:'Бочка и малый строго на сильных долях (1 и 3 / 2 и 4)',
+    kick:  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+  { key:'medium', level:'средняя синкопация',
+    name:'Бочка сдвинута на слабые доли, бэкбит малого остался на месте',
+    kick:  [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0],
+    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+  { key:'high', level:'высокая синкопация',
+    name:'И бочка, и малый ушли со своих привычных долей',
+    kick:  [1,0,0,1,0,0,1,0,0,0,0,1,0,0,0,0],
+    snare: [0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1] },
+  { key:'extreme', level:'экстремальная синкопация',
+    name:'Почти всё — на слабых долях, сильные доли практически пустые',
+    kick:  [0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1],
+    snare: [0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0] },
+];
+
+let audioCtx = null;
+let isPlaying = false;
+let schedulerTimer = null;
+let animFrameId = null;
+let currentVisStep = -1;
+let playStartTime = 0;
+
+function ensureAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playKick(ctx, time){
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(150, time);
+  osc.frequency.exponentialRampToValueAtTime(45, time + 0.15);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(1, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(time); osc.stop(time + 0.2);
+}
+
+function noiseBuffer(ctx, seconds){
+  const size = Math.max(1, Math.floor(ctx.sampleRate * seconds));
+  const buffer = ctx.createBuffer(1, size, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<size;i++) data[i] = Math.random()*2-1;
+  return buffer;
+}
+
+function playSnare(ctx, time){
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer(ctx, 0.2);
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'highpass'; filter.frequency.value = 1200;
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.9, time);
+  noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
+  noise.connect(filter).connect(noiseGain).connect(ctx.destination);
+  noise.start(time); noise.stop(time + 0.2);
+
+  const osc = ctx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(190, time);
+  const oscGain = ctx.createGain();
+  oscGain.gain.setValueAtTime(0.6, time);
+  oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+  osc.connect(oscGain).connect(ctx.destination);
+  osc.start(time); osc.stop(time + 0.12);
+}
+
+function playHihat(ctx, time){
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer(ctx, 0.05);
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'highpass'; filter.frequency.value = 7500;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.25, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.045);
+  noise.connect(filter).connect(gain).connect(ctx.destination);
+  noise.start(time); noise.stop(time + 0.05);
+}
+
+let seqRefs = null; // set by renderTrial
+
+function updateGridHighlight(){
+  if(!seqRefs) return;
+  ['hihat','kick','snare'].forEach(track=>{
+    seqRefs.cells[track].forEach((cellEl, idx)=>{
+      cellEl.classList.toggle('playhead', isPlaying && idx===currentVisStep);
+    });
+  });
+}
+
+function updatePlayButtonUI(){
+  if(!seqRefs || !seqRefs.playBtn) return;
+  seqRefs.playBtn.textContent = isPlaying ? '\u25A0 ОСТАНОВИТЬ' : '\u25B6 ИГРАТЬ ЦИКЛ';
+  seqRefs.playBtn.classList.toggle('is-playing', isPlaying);
+}
+
+function stopPlayback(){
+  isPlaying = false;
+  if(schedulerTimer){ clearTimeout(schedulerTimer); schedulerTimer = null; }
+  if(animFrameId){ cancelAnimationFrame(animFrameId); animFrameId = null; }
+  currentVisStep = -1;
+  updatePlayButtonUI();
+  updateGridHighlight();
+}
+
+function startPlayback(pattern){
+  const ctx = ensureAudioCtx();
+  isPlaying = true;
+  let nextNoteTime = ctx.currentTime + 0.05;
+  let step = 0;
+  playStartTime = nextNoteTime;
+
+  function scheduleStep(stepIdx, time){
+    if(HIHAT_PATTERN[stepIdx]) playHihat(ctx, time);
+    if(pattern.kick[stepIdx]) playKick(ctx, time);
+    if(pattern.snare[stepIdx]) playSnare(ctx, time);
+  }
+  function schedulerLoop(){
+    if(!isPlaying) return;
+    while(nextNoteTime < ctx.currentTime + 0.12){
+      scheduleStep(step, nextNoteTime);
+      nextNoteTime += STEP_DUR;
+      step = (step+1) % 16;
+    }
+    schedulerTimer = setTimeout(schedulerLoop, 25);
+  }
+  schedulerLoop();
+  updatePlayButtonUI();
+
+  function visLoop(){
+    if(!isPlaying) return;
+    const elapsed = ctx.currentTime - playStartTime;
+    let vs = Math.floor(elapsed / STEP_DUR) % 16;
+    if(vs < 0) vs = 0;
+    if(vs !== currentVisStep){ currentVisStep = vs; updateGridHighlight(); }
+    animFrameId = requestAnimationFrame(visLoop);
+  }
+  animFrameId = requestAnimationFrame(visLoop);
+}
+
+/* ---------------- helpers ---------------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function uid(){ return 'r_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,9); }
+
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  for(const k in attrs){
+    if(k === 'class') e.className = attrs[k];
+    else if(k === 'html') e.innerHTML = attrs[k];
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c==null) return;
+    if(typeof c === 'string') e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  });
+  return e;
+}
+function screws(panel){ ['tl','tr','bl','br'].forEach(pos=>panel.appendChild(el('div',{class:'screw '+pos}))); }
+
+/* ---------------- state ---------------- */
+let state = {
+  screen: 'intro',
+  order: shuffle(STIMULI),
+  trialIndex: 0,
+  demo: { freq: null, enjoy: null },
+  ratings: {},
+  responseId: uid(),
+  results: null,
+  saveError: null,
+};
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  if(state.screen === 'intro') app.appendChild(renderIntro());
+  else if(state.screen === 'demo') app.appendChild(renderDemo());
+  else if(state.screen === 'trial') app.appendChild(renderTrial());
+  else if(state.screen === 'debrief') app.appendChild(renderDebrief());
+  else if(state.screen === 'results') app.appendChild(renderResults());
+}
+
+/* ---------------- intro ---------------- */
+function renderIntro(){
+  const wrap = el('div');
+  wrap.appendChild(el('div',{class:'eyebrow'},'Witek et al.'));
+  wrap.appendChild(el('h1',{},'ЛАБОРАТОРИЯ ГРУВА'));
+  wrap.appendChild(el('p',{class:'lead'},
+    'Вы услышите пять коротких барабанных паттернов. После каждого паттерна оцените на двух ползунках, насколько хотелось двигаться и насколько вам было приятно это слушать.'));
+  const panel = el('div',{class:'panel'});
+  screws(panel);
+  panel.appendChild(el('p',{style:'margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.6;'},
+    'Займёт около 2 минут. Включите звук — хай-хэт играет ровными восьмыми на протяжении всего теста, это ваш ориентир.'));
+  panel.appendChild(el('button',{class:'btn', onclick:()=>{ state.screen='demo'; render(); }},'НАЧАТЬ \u2192'));
+  wrap.appendChild(panel);
+  wrap.appendChild(el('div',{class:'footer-note'},'Ваши ответы сохраняются анонимно и видны всем участникам в сводке результатов'));
+  return wrap;
+}
+
+/* ---------------- demographics ---------------- */
+function renderDemo(){
+  const wrap = el('div');
+  wrap.appendChild(el('div',{class:'eyebrow'},'Шаг 1 из 2'));
+  wrap.appendChild(el('h1',{},'НЕМНОГО О ВАС'));
+  const panel = el('div',{class:'panel'});
+  screws(panel);
+
+  const f1 = el('div',{class:'field'});
+  f1.appendChild(el('label',{},'Как часто вы танцуете?'));
+  const row1 = el('div',{class:'choice-row'});
+  ['Никогда','Редко','Иногда','Часто'].forEach(opt=>{
+    const c = el('div',{class:'choice'+(state.demo.freq===opt?' selected':'')}, opt);
+    c.addEventListener('click',()=>{ state.demo.freq=opt; render(); });
+    row1.appendChild(c);
+  });
+  f1.appendChild(row1);
+  panel.appendChild(f1);
+
+  const f2 = el('div',{class:'field'});
+  f2.appendChild(el('label',{},'Насколько вам нравится танцевать?'));
+  const row2 = el('div',{class:'choice-row'});
+  ['Совсем не нравится','Нейтрально','Нравится','Обожаю'].forEach(opt=>{
+    const c = el('div',{class:'choice'+(state.demo.enjoy===opt?' selected':'')}, opt);
+    c.addEventListener('click',()=>{ state.demo.enjoy=opt; render(); });
+    row2.appendChild(c);
+  });
+  f2.appendChild(row2);
+  panel.appendChild(f2);
+
+  const actions = el('div',{class:'actions'});
+  actions.appendChild(el('button',{class:'btn secondary', onclick:()=>{ state.screen='intro'; render(); }},'\u2190 НАЗАД'));
+  const canGo = state.demo.freq && state.demo.enjoy;
+  const nextBtn = el('button',{class:'btn', onclick:()=>{ state.screen='trial'; state.trialIndex=0; render(); }},'ДАЛЬШЕ \u2192');
+  if(!canGo) nextBtn.setAttribute('disabled','true');
+  actions.appendChild(nextBtn);
+  panel.appendChild(actions);
+
+  wrap.appendChild(panel);
+  return wrap;
+}
+
+/* ---------------- trial ---------------- */
+function renderTrial(){
+  stopPlayback();
+  const item = state.order[state.trialIndex];
+  const wrap = el('div');
+  wrap.appendChild(el('div',{class:'eyebrow'},'Шаг 2 из 2 \u00B7 Прослушивание'));
+  wrap.appendChild(el('h1',{},'ОЦЕНИТЕ ПАТТЕРН'));
+
+  const dots = el('div',{class:'progress'});
+  state.order.forEach((s,i)=>{
+    let cls='dot';
+    if(i<state.trialIndex) cls+=' done';
+    else if(i===state.trialIndex) cls+=' active';
+    dots.appendChild(el('div',{class:cls}));
+  });
+  wrap.appendChild(dots);
+
+  const panel = el('div',{class:'panel'});
+  screws(panel);
+
+  const seq = el('div',{class:'sequencer'});
+  const transport = el('div',{class:'seq-transport'});
+  const playBtn = el('button',{class:'btn', onclick:()=>{
+    if(isPlaying) stopPlayback();
+    else startPlayback(item);
+  }},'\u25B6 ИГРАТЬ ЦИКЛ');
+  transport.appendChild(playBtn);
+  transport.appendChild(el('div',{class:'seq-tempo'}, BPM + ' BPM \u00B7 цикл 1 такт'));
+  seq.appendChild(transport);
+
+  seqRefs = { cells:{hihat:[],kick:[],snare:[]}, playBtn };
+
+  const rowsDef = [
+    {track:'hihat', label:'ХЭТ', pattern:HIHAT_PATTERN, dim:true},
+    {track:'snare', label:'МАЛЫЙ', pattern:item.snare, dim:false},
+    {track:'kick',  label:'БОЧКА', pattern:item.kick, dim:false},
+  ];
+  rowsDef.forEach(rd=>{
+    const row = el('div',{class:'seq-row'});
+    row.appendChild(el('div',{class:'seq-row-label'}, rd.label));
+    const cellsWrap = el('div',{class:'seq-cells'});
+    for(let i=0;i<16;i++){
+      let cls = 'seq-cell';
+      if(STRONG_BEATS.includes(i)) cls += ' strong';
+      if(rd.pattern[i]) cls += ' active';
+      const cell = el('div',{class:cls});
+      cellsWrap.appendChild(cell);
+      seqRefs.cells[rd.track].push(cell);
+    }
+    row.appendChild(cellsWrap);
+    seq.appendChild(row);
+  });
+
+  const numRow = el('div',{class:'seq-row'});
+  numRow.appendChild(el('div',{class:'seq-row-label'}, ''));
+  const numCells = el('div',{class:'seq-cells'});
+  for(let i=0;i<16;i++){
+    const label = STRONG_BEATS.includes(i) ? String(STRONG_BEATS.indexOf(i)+1) : '';
+    numCells.appendChild(el('div',{class:'seq-beatnum'+(label?' marked':'')}, label));
+  }
+  numRow.appendChild(numCells);
+  seq.appendChild(numRow);
+
+  const tag = el('div',{class:'track-tag'});
+  tag.appendChild(el('span',{class:'rec'}, 'ПАТТЕРН ' + (state.trialIndex+1) + ' / ' + state.order.length));
+  tag.appendChild(el('span',{}, 'ID: ' + item.key.toUpperCase().slice(0,1) + (Math.abs(hashCode(item.key))%900)));
+  seq.appendChild(tag);
+
+  panel.appendChild(seq);
+
+  const current = state.ratings[item.key] || {move:4, pleasure:4};
+  const consoleEl = el('div',{class:'console'});
+  consoleEl.appendChild(makeFader('ХОЧЕТСЯ ДВИГАТЬСЯ', current.move, v=>{
+    state.ratings[item.key] = Object.assign({}, state.ratings[item.key]||current, {move:v});
+  }));
+  consoleEl.appendChild(makeFader('УДОВОЛЬСТВИЕ', current.pleasure, v=>{
+    state.ratings[item.key] = Object.assign({}, state.ratings[item.key]||current, {pleasure:v});
+  }));
+  panel.appendChild(consoleEl);
+
+  panel.appendChild(el('p',{class:'hint'},'1 — совсем нет, 7 — очень сильно. Нажмите «Играть цикл», прослушайте паттерн (можно несколько раз), затем подвиньте оба фейдера и переходите дальше.'));
+
+  const actions = el('div',{class:'actions'});
+  const backBtn = el('button',{class:'btn secondary', onclick:()=>{
+    stopPlayback();
+    if(state.trialIndex>0){ state.trialIndex--; } else { state.screen='demo'; }
+    render();
+  }},'\u2190 НАЗАД');
+  actions.appendChild(backBtn);
+
+  const isLast = state.trialIndex === state.order.length-1;
+  const nextBtn = el('button',{class:'btn', onclick:()=>{
+    stopPlayback();
+    if(!state.ratings[item.key]) state.ratings[item.key] = {move:4, pleasure:4};
+    if(isLast){ state.screen='debrief'; saveResponse(); }
+    else { state.trialIndex++; }
+    render();
+  }}, isLast? 'ЗАВЕРШИТЬ \u2192' : 'ДАЛЕЕ \u2192');
+  actions.appendChild(nextBtn);
+
+  panel.appendChild(actions);
+  wrap.appendChild(panel);
+  return wrap;
+}
+
+function hashCode(s){
+  let h=0;
+  for(let i=0;i<s.length;i++){ h = (h<<5)-h + s.charCodeAt(i); h|=0; }
+  return h;
+}
+
+function makeFader(label, value, onChange){
+  const unit = el('div',{class:'fader-unit'});
+  unit.appendChild(el('div',{class:'fader-label'}, label));
+  const scale = el('div',{class:'fader-scale'});
+  const ticks = el('div',{class:'tickcol'});
+  ['7','','','4','','','1'].forEach(t=>ticks.appendChild(el('span',{},t)));
+  scale.appendChild(ticks);
+  const trackBg = el('div',{class:'fader-track-bg'});
+  const vwrap = el('div',{class:'vwrap'});
+  const input = el('input',{ type:'range', min:'1', max:'7', step:'1', value:String(value), class:'vslider' });
+  const valueLabel = el('div',{class:'fader-value'}, String(value));
+  input.addEventListener('input', (e)=>{
+    valueLabel.textContent = e.target.value;
+    onChange(parseInt(e.target.value,10));
+  });
+  vwrap.appendChild(input);
+  trackBg.appendChild(vwrap);
+  scale.appendChild(trackBg);
+  unit.appendChild(scale);
+  unit.appendChild(valueLabel);
+  return unit;
+}
+
+/* ---------------- save ---------------- */
+async function saveResponse(){
+  try{
+    const payload = { order: state.order.map(s=>s.key), ratings: state.ratings, demo: state.demo, ts: Date.now() };
+    await window.storage.set('groove-responses:' + state.responseId, JSON.stringify(payload), true);
+  }catch(err){
+    console.error('save error', err);
+    state.saveError = 'Не удалось сохранить ответ, но вы можете посмотреть общие результаты.';
+  }
+}
+
+/* ---------------- debrief ---------------- */
+function renderDebrief(){
+  const wrap = el('div');
+  wrap.appendChild(el('div',{class:'eyebrow'},'Готово'));
+  wrap.appendChild(el('h1',{},'СПАСИБО!'));
+  const panel = el('div',{class:'panel'});
+  screws(panel);
+  panel.appendChild(el('p',{style:'color:var(--muted); font-size:14px; line-height:1.7; margin:0 0 16px;'},
+    'Вот что вы слушали, от менее к более синкопированному:'));
+
+  const list = el('div',{style:'margin-bottom:20px;'});
+  STIMULI.forEach(s=>{
+    const r = state.ratings[s.key] || {};
+    const row = el('div',{style:'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); gap:10px;'});
+    const left = el('div');
+    left.appendChild(el('div',{style:'font-family:JetBrains Mono, monospace; font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:.06em;'}, s.level));
+    left.appendChild(el('div',{style:'font-size:14px; margin-top:2px;'}, s.name));
+    row.appendChild(left);
+    row.appendChild(el('div',{style:'font-family:JetBrains Mono, monospace; font-size:12px; color:var(--muted); white-space:nowrap;'},
+      'движение ' + (r.move ?? '\u2014') + ' \u00B7 удовольствие ' + (r.pleasure ?? '\u2014')));
+    list.appendChild(row);
+  });
+  panel.appendChild(list);
+
+  if(state.saveError){
+    panel.appendChild(el('p',{style:'color:var(--rust); font-size:13px;'}, state.saveError));
+  }
+
+  const actions = el('div',{class:'actions'});
+  actions.appendChild(el('button',{class:'btn secondary', onclick:()=>{
+    state = { screen:'intro', order:shuffle(STIMULI), trialIndex:0, demo:{freq:null,enjoy:null}, ratings:{}, responseId:uid(), results:null, saveError:null };
+    render();
+  }},'ПРОЙТИ ЕЩЁ РАЗ'));
+  actions.appendChild(el('button',{class:'btn', onclick:async ()=>{ await loadResults(); state.screen='results'; render(); }},'ОБЩИЕ РЕЗУЛЬТАТЫ \u2192'));
+  panel.appendChild(actions);
+
+  wrap.appendChild(panel);
+  wrap.appendChild(el('div',{class:'footer-note'},'Ожидание по Witek et al. (2014): пик отклика \u2014 у средней синкопации'));
+  return wrap;
+}
+
+/* ---------------- results ---------------- */
+async function loadResults(){
+  try{
+    const list = await window.storage.list('groove-responses:', true);
+    const keys = (list && list.keys) ? list.keys : [];
+    const sums = {};
+    STIMULI.forEach(s=>{ sums[s.key] = {move:0, pleasure:0, n:0}; });
+    for(const k of keys){
+      try{
+        const res = await window.storage.get(k, true);
+        if(!res) continue;
+        const data = JSON.parse(res.value);
+        for(const cond of Object.keys(sums)){
+          const r = data.ratings && data.ratings[cond];
+          if(r && typeof r.move === 'number' && typeof r.pleasure === 'number'){
+            sums[cond].move += r.move;
+            sums[cond].pleasure += r.pleasure;
+            sums[cond].n += 1;
+          }
+        }
+      }catch(e){ /* skip malformed entry */ }
+    }
+    state.results = sums;
+  }catch(err){
+    console.error('load results error', err);
+    state.results = null;
+  }
+}
+
+function renderResults(){
+  const wrap = el('div');
+  wrap.appendChild(el('div',{class:'eyebrow'},'Сводка по всем участникам'));
+  wrap.appendChild(el('h1',{},'ОБЩИЕ РЕЗУЛЬТАТЫ'));
+  const panel = el('div',{class:'panel'});
+  screws(panel);
+
+  if(!state.results){
+    panel.appendChild(el('p',{style:'color:var(--muted);'},'Пока нет данных или не удалось их загрузить.'));
+  } else {
+    panel.appendChild(el('p',{style:'color:var(--muted); font-size:13px; margin-bottom:20px;'},
+      'Ожидаем перевёрнутую U-образную кривую с пиком на средней синкопации.'));
+    STIMULI.forEach(s=>{
+      const d = state.results[s.key];
+      const avgMove = d.n ? (d.move/d.n) : 0;
+      const avgPleasure = d.n ? (d.pleasure/d.n) : 0;
+      const block = el('div',{class:'vu-row'});
+      block.appendChild(el('div',{class:'vu-title'}, s.level.toUpperCase() + ' \u00B7 n=' + d.n));
+
+      const bar1bg = el('div',{class:'vu-bar-bg'});
+      bar1bg.appendChild(el('div',{class:'vu-bar-fill', style:'width:'+(avgMove/7*100).toFixed(0)+'%'}));
+      block.appendChild(bar1bg);
+      block.appendChild(el('div',{class:'vu-caption'}, [el('span',{},'движение'), el('span',{}, avgMove.toFixed(2)+' / 7')]));
+
+      const bar2bg = el('div',{class:'vu-bar-bg', style:'margin-top:8px;'});
+      bar2bg.appendChild(el('div',{class:'vu-bar-fill', style:'width:'+(avgPleasure/7*100).toFixed(0)+'%'}));
+      block.appendChild(bar2bg);
+      block.appendChild(el('div',{class:'vu-caption'}, [el('span',{},'удовольствие'), el('span',{}, avgPleasure.toFixed(2)+' / 7')]));
+
+      panel.appendChild(block);
+    });
+  }
+
+  const actions = el('div',{class:'actions'});
+  actions.appendChild(el('button',{class:'btn secondary', onclick:()=>{ state.screen='debrief'; render(); }},'\u2190 НАЗАД'));
+  actions.appendChild(el('button',{class:'btn', onclick:async ()=>{ await loadResults(); render(); }},'ОБНОВИТЬ'));
+  panel.appendChild(actions);
+
+  wrap.appendChild(panel);
+  wrap.appendChild(el('div',{class:'footer-note'},'Данные анонимны и общие для всех, кто проходил опрос'));
+  return wrap;
+}
+
+render();
+</script>
+</body>
+</html>
